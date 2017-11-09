@@ -143,7 +143,7 @@ chkDeclarations env envB
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkDeclarations env envB ds
-        Right (env', x') -> do                      
+        Right (env', x') -> do
             wellinit (itmsLvl x') e'
             (ds', env'') <- chkDeclarations env'    -- env'; envB |- ds | env''
                                             envB
@@ -159,7 +159,7 @@ chkDeclarations env envB
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkDeclarations env envB ds
-        Right (env', x') -> do                      
+        Right (env', x') -> do
             (ds', env'') <- chkDeclarations env'    -- env'; envB |- ds | env''
                                             envB
                                             ds
@@ -193,7 +193,7 @@ chkDeclarations env envB
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkDeclarations env envB ds
-        Right (env', f') -> do                      
+        Right (env', f') -> do
             (ds', env'') <- chkDeclarations env'    -- env'; envB |- ds | env''
                                             envB
                                             ds
@@ -211,7 +211,7 @@ chkDeclarations env envB
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkDeclarations env envB ds
-        Right (env', p') -> do                      
+        Right (env', p') -> do
             (ds', env'') <- chkDeclarations env'    -- env'; envB |- ds | env''
                                             envB
                                             ds
@@ -228,7 +228,7 @@ chkArgDecls :: Env -> [A.ArgDecl] -> D ([IntTermSym], Env)
 -- T-DECLARGEMPTY
 chkArgDecls env [] = return ([], env)
 -- T-DECLARG, T-DECLINARG, T-DECLOUTARG, T-DECLVARARG
-chkArgDecls env  
+chkArgDecls env
             (A.ArgDecl {A.adArg = x, A.adArgMode = am, A.adType = td,
              A.adSrcPos=sp}
             : as) = do
@@ -237,7 +237,7 @@ chkArgDecls env
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkArgDecls env as
-        Right (env', x') -> do                          
+        Right (env', x') -> do
             (as', env'') <- chkArgDecls env' as         -- env' |- as | env''
             return (x' : as', env'')
 
