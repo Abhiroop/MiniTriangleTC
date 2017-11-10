@@ -332,6 +332,11 @@ infTpExp env e@(A.ExpLitInt {A.eliVal = n, A.expSrcPos = sp}) = do
     n' <- toMTInt n sp
     return (Integer,                            -- env |- n : Integer
             ExpLitInt {eliVal = n', expType = Integer, expSrcPos = sp})
+-- T-LITCHAR
+infTpExp env e@(A.ExpLitChr {A.elcVal = c, A.expSrcPos = sp}) = do
+    c' <- toMTChr c sp
+    return (Character,                            -- env |- c : Character
+            ExpLitChr {elcVal = c', expType = Character, expSrcPos = sp})
 -- T-VAR
 infTpExp env (A.ExpVar {A.evVar = x, A.expSrcPos = sp}) = do
     tms <- lookupName env x sp          -- env(x) = t, sources(t,t)

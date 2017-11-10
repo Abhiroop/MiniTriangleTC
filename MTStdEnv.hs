@@ -65,7 +65,7 @@ mtStdEnv =
     mkTopLvlEnv
         [("Boolean",   Boolean),
          ("Integer",   Integer),
-         ("Character", Char)]
+         ("Character", Character)]
         [("false",   Boolean, ESVBool False),
          ("true",    Boolean, ESVBool True),
          ("minint",  Integer, ESVInt (minBound :: MTInt)),
