@@ -110,6 +110,11 @@ chkCmd env (A.CmdWhile {A.cwCond = e, A.cwBody = c, A.cmdSrcPos = sp}) = do
     e' <- chkTpExp env e Boolean                        -- env |- e : Boolean
     c' <- chkCmd env c                                  -- env |- c
     return (CmdWhile {cwCond = e', cwBody = c', cmdSrcPos = sp})
+-- T-REPEAT
+chkCmd env (A.CmdRepeat {A.crBody = c, A.crCond = e, A.cmdSrcPos = sp}) = do
+    c' <- chkCmd env c                                  -- env |- c
+    e' <- chkTpExp env e Boolean                        -- env |- e : Boolean
+    return (CmdRepeat {crBody = c', crCond = e', cmdSrcPos = sp})
 -- T-LET
 chkCmd env (A.CmdLet {A.clDecls = ds, A.clBody = c, A.cmdSrcPos = sp}) = do
     (ds', env') <- mfix $ \ ~(_, env') ->               -- env;env'|- ds | env'

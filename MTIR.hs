@@ -75,6 +75,12 @@ data Command
           cwBody    :: Command,         -- ^ Loop-body
           cmdSrcPos :: SrcPos
       }
+    -- | Repeat-loop
+    | CmdRepeat {
+          crBody    :: Command,         -- ^ Loop-body
+          crCond    :: Expression,      -- ^ Loop-condition
+          cmdSrcPos :: SrcPos
+      }
     -- | Let-command
     | CmdLet {
           clDecls   :: [Declaration],   -- ^ Declarations

@@ -168,6 +168,7 @@ execute majl env n (CmdWhile {cwCond = e, cwBody = c}) = do
     emit (Label lblCond)
     evaluate majl env e
     emit (JUMPIFNZ lblLoop)
+execute majl env n (CmdRepeat {crBody = c, crCond = e}) = undefined
 execute majl env n (CmdLet {clDecls = ds, clBody = c}) = do
     (env', n') <- elaborateDecls majl env n ds
     execute majl env' n' c
