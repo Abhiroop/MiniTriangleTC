@@ -692,6 +692,7 @@ wellinit l (ExpAry {eaElts = es}) = mapM_ (wellinit l) es
 wellinit l (ExpIx {eiAry = a, eiIx = i}) = wellinit l a >> wellinit l i
 wellinit l (ExpRcd {erFldDefs = fds}) = mapM_ (wellinit l . snd) fds
 wellinit l (ExpPrj {epRcd = e}) = wellinit l e
+wellinit l (ExpCond {ecCond = e, ecTrue = et, ecFalse = ef}) = wellinit l e >> wellinit l et >> wellinit l ef
 
 
 ------------------------------------------------------------------------------
