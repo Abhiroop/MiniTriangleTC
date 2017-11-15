@@ -168,7 +168,7 @@ execute majl env n (CmdWhile {cwCond = e, cwBody = c}) = do
     emit (Label lblCond)
     evaluate majl env e
     emit (JUMPIFNZ lblLoop)
-execute majl env n (CmdRepeat {crBody = c, crCond = e}) = undefined
+execute majl env n (CmdRepeat {crBody = c, crCond = e}) = undefined -- TODO: Implement Repeat Until
 execute majl env n (CmdLet {clDecls = ds, clBody = c}) = do
     (env', n') <- elaborateDecls majl env n ds
     execute majl env' n' c
@@ -383,6 +383,7 @@ evaluate majl env (ExpPrj {epRcd = r, epFld = f, expType = t}) = do
     evaluate majl env r
     emit (LOADL (fldOffset f tr))
     emit ADD
+evaluate majl env (ExpCond {ecCond = e, ecTrue = et, ecFalse = ef}) = undefined --TODO: Implement Conditional expression
 
 
 ------------------------------------------------------------------------------
