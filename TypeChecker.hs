@@ -411,7 +411,13 @@ infTpExp env (A.ExpPrj {A.epRcd = e, A.epFld = f, A.expSrcPos = sp}) = do
     where
         notAFieldMsg f rt = "The type \"" ++ show rt
                             ++ "\" does not contain any field \"" ++ f ++ "\"" 
-
+-- T-COND
+infTpExp env (A.ExpCond {A.ecCond = e, A.ecTrue = et, A.ecFalse = ef, A.expSrcPos = sp}) = do
+  e'              <- chkTpExp env e Boolean
+  (tyTrue , et')  <- infNonRefTpExp env et
+  (tyFalse, ef')  <- infNonRefTpExp env ef
+  require (tyTrue == tyFalse) (srcPos e) ("Types of the 2 expressions don't match")
+  return (tyTrue, ExpCond {ecCond = e', ecTrue = et', ecFalse = ef', expType = tyTrue, expSrcPos = sp}) -- tyTrue and tyFalse should be of the same type
 
 -- Check that expression is well-typed in the given environment and
 -- infer its type assuming it should be an non-reference type:
