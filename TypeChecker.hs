@@ -96,15 +96,13 @@ chkCmd env (A.CmdSeq {A.csCmds = cs, A.cmdSrcPos = sp}) = do
 -- T-IF
 chkCmd env (A.CmdIf {A.ciCondThens = ecs, A.ciMbElse = mc2,
                      A.cmdSrcPos=sp}) = do
--- YOUR CODE HERE: This has just been patched to work for the original
--- if-then-else. The entire list ecs needs to be processed properly,
--- and the fact that the else-branch is optional taken care of.
-    let (e, c1) = head ecs      -- Not wrong, but unnecessary
-    let c2      = fromJust mc2  -- Wrong: the else-branch might not be there.
-    e'  <- chkTpExp env e Boolean                       -- env |- e : Boolean
-    c1' <- chkCmd env c1                                -- env |- c1
-    c2' <- chkCmd env c2                                -- env |- c2
-    return (CmdIf {})
+  ecs' <- mapM (chkIfExps env) ecs        -- :: [Expression,Command]
+  mc2' <- case mc2 of                     -- :: Maybe Command
+            Nothing -> return Nothing
+            Just c  -> do
+              c' <-  chkCmd env c                       -- env |- c
+              return (Just c')
+  return (CmdIf {ciCondThens = ecs', ciMbElse = mc2', cmdSrcPos = sp})
 -- T-WHILE
 chkCmd env (A.CmdWhile {A.cwCond = e, A.cwBody = c, A.cmdSrcPos = sp}) = do
     e' <- chkTpExp env e Boolean                        -- env |- e : Boolean
@@ -118,9 +116,16 @@ chkCmd env (A.CmdRepeat {A.crBody = c, A.crCond = e, A.cmdSrcPos = sp}) = do
 -- T-LET
 chkCmd env (A.CmdLet {A.clDecls = ds, A.clBody = c, A.cmdSrcPos = sp}) = do
     (ds', env') <- mfix $ \ ~(_, env') ->               -- env;env'|- ds | env'
-                       chkDeclarations (openMinScope env) env' ds 
+                       chkDeclarations (openMinScope env) env' ds
     c'          <- chkCmd env' c                        -- env' |- c
     return (CmdLet {clDecls = ds', clBody = c', cmdSrcPos = sp})
+
+-- Helper function that is mapped over multiple if and elsif expressions
+chkIfExps :: Env -> (A.Expression,A.Command) -> D (Expression,Command)
+chkIfExps env (e,c) = do
+  e' <- chkTpExp env e Boolean                          -- env |- e : Boolean
+  c' <- chkCmd env c                                    -- env |- c
+  return (e',c')
 
 
 -- Check that declarations/definitions are well-typed in given environment
@@ -413,9 +418,9 @@ infTpExp env (A.ExpPrj {A.epRcd = e, A.epFld = f, A.expSrcPos = sp}) = do
                             ++ "\" does not contain any field \"" ++ f ++ "\"" 
 -- T-COND
 infTpExp env (A.ExpCond {A.ecCond = e, A.ecTrue = et, A.ecFalse = ef, A.expSrcPos = sp}) = do
-  e'              <- chkTpExp env e Boolean
-  (tyTrue , et')  <- infNonRefTpExp env et
-  (tyFalse, ef')  <- infNonRefTpExp env ef
+  e'              <- chkTpExp env e Boolean     -- env |- e : Boolean
+  (tyTrue , et')  <- infNonRefTpExp env et      -- env |- e : t, not reftype(t)
+  (tyFalse, ef')  <- infNonRefTpExp env ef      -- env |- e : t, not reftype(t)
   require (tyTrue == tyFalse) (srcPos e) ("Types of the 2 expressions don't match")
   return (tyTrue, ExpCond {ecCond = e', ecTrue = et', ecFalse = ef', expType = tyTrue, expSrcPos = sp}) -- tyTrue and tyFalse should be of the same type
 
