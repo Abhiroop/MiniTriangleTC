@@ -104,7 +104,7 @@ chkCmd env (A.CmdIf {A.ciCondThens = ecs, A.ciMbElse = mc2,
     e'  <- chkTpExp env e Boolean                       -- env |- e : Boolean
     c1' <- chkCmd env c1                                -- env |- c1
     c2' <- chkCmd env c2                                -- env |- c2
-    return (CmdIf {ciCond = e', ciThen = c1', ciElse = c2', cmdSrcPos = sp})
+    return (CmdIf {})
 -- T-WHILE
 chkCmd env (A.CmdWhile {A.cwCond = e, A.cwBody = c, A.cmdSrcPos = sp}) = do
     e' <- chkTpExp env e Boolean                        -- env |- e : Boolean

@@ -149,7 +149,10 @@ execute majl env n (CmdCall {ccProc = p, ccArgs = as}) = do
     evaluate majl env p
     emit CALLI
 execute majl env n (CmdSeq {csCmds = cs}) = executeSeq majl env n cs
-execute majl env n (CmdIf {ciCond = e, ciThen = c1, ciElse = c2}) = do
+execute majl env n (CmdIf {ciCondThens = ecs, ciMbElse = mc}) = undefined
+-- TODO : Implement if then else code generation
+{-
+  do
     lblElse <- newName
     lblOver <- newName
     evaluate majl env e
@@ -159,6 +162,7 @@ execute majl env n (CmdIf {ciCond = e, ciThen = c1, ciElse = c2}) = do
     emit (Label lblElse)
     execute majl env n c2
     emit (Label lblOver)
+-}
 execute majl env n (CmdWhile {cwCond = e, cwBody = c}) = do
     lblLoop <- newName
     lblCond <- newName

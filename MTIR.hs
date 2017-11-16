@@ -62,12 +62,13 @@ data Command
           csCmds    :: [Command],       -- ^ Commands
           cmdSrcPos :: SrcPos
       }
-    -- | Conditional command
+
+        -- | Conditional command
     | CmdIf {
-          ciCond    :: Expression,      -- ^ Condition
-          ciThen    :: Command,         -- ^ Then-branch
-          ciElse    :: Command,         -- ^ Else-branch
-          cmdSrcPos :: SrcPos
+          ciCondThens :: [(Expression,
+                           Command)],   -- ^ Conditional branches
+          ciMbElse    :: Maybe Command, -- ^ Optional else-branch
+          cmdSrcPos   :: SrcPos
       }
     -- | While-loop
     | CmdWhile {
