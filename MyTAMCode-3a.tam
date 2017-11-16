@@ -1,0 +1,7 @@
+GETINT
+LOAD [LB - 1]
+LOADL 1
+LSS
+JUMPIFNZ end
+loop : LOAD [LB - 1]
+HALT

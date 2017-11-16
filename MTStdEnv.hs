@@ -56,6 +56,10 @@ import Env
 --
 --   * putint : Integer -> Void
 --
+--   * getchr : (Snk Character) -> Void
+--
+--   * putchr : Character -> Void
+--
 --   * skip : () -> Void
 --
 -- Note that lables have to agree with the code in "LibMT".
@@ -87,4 +91,6 @@ mtStdEnv =
          ("!",       Arr [Boolean] Boolean,          ESVLbl "not"),
          ("getint",  Arr [Snk Integer] Void,         ESVLbl "getint"),
          ("putint",  Arr [Integer] Void,             ESVLbl "putint"),
+         ("getchr",  Arr [Snk Character] Void,       ESVLbl "getchr"),
+         ("putchr",  Arr [Character] Void,           ESVLbl "putchr"),
          ("skip",    Arr [] Void,                    ESVLbl "skip")]
