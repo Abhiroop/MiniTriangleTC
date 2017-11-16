@@ -149,7 +149,10 @@ execute majl env n (CmdCall {ccProc = p, ccArgs = as}) = do
     evaluate majl env p
     emit CALLI
 execute majl env n (CmdSeq {csCmds = cs}) = executeSeq majl env n cs
-execute majl env n (CmdIf {ciCond = e, ciThen = c1, ciElse = c2}) = do
+execute majl env n (CmdIf {ciCondThens = ecs, ciMbElse = mc}) = undefined
+-- TODO : Implement if then else code generation
+{-
+  do
     lblElse <- newName
     lblOver <- newName
     evaluate majl env e
@@ -159,6 +162,7 @@ execute majl env n (CmdIf {ciCond = e, ciThen = c1, ciElse = c2}) = do
     emit (Label lblElse)
     execute majl env n c2
     emit (Label lblOver)
+-}
 execute majl env n (CmdWhile {cwCond = e, cwBody = c}) = do
     lblLoop <- newName
     lblCond <- newName
@@ -168,6 +172,7 @@ execute majl env n (CmdWhile {cwCond = e, cwBody = c}) = do
     emit (Label lblCond)
     evaluate majl env e
     emit (JUMPIFNZ lblLoop)
+execute majl env n (CmdRepeat {crBody = c, crCond = e}) = undefined -- TODO: Implement Repeat Until
 execute majl env n (CmdLet {clDecls = ds, clBody = c}) = do
     (env', n') <- elaborateDecls majl env n ds
     execute majl env' n' c
@@ -382,6 +387,7 @@ evaluate majl env (ExpPrj {epRcd = r, epFld = f, expType = t}) = do
     evaluate majl env r
     emit (LOADL (fldOffset f tr))
     emit ADD
+evaluate majl env (ExpCond {ecCond = e, ecTrue = et, ecFalse = ef}) = undefined --TODO: Implement Conditional expression
 
 
 ------------------------------------------------------------------------------
@@ -483,7 +489,7 @@ sizeOf SomeType  = cgErr "sizeOf" sizeOfErrMsgSomeType
 sizeOf Void      = 0
 sizeOf Boolean   = 1
 sizeOf Integer   = 1
--- sizeOf Character = 1
+sizeOf Character = 1
 sizeOf (Src _)   = 1
 sizeOf (Snk _)   = 1
 sizeOf (Ref _)   = 1

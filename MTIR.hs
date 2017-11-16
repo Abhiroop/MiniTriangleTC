@@ -62,17 +62,24 @@ data Command
           csCmds    :: [Command],       -- ^ Commands
           cmdSrcPos :: SrcPos
       }
-    -- | Conditional command
+
+        -- | Conditional command
     | CmdIf {
-          ciCond    :: Expression,      -- ^ Condition
-          ciThen    :: Command,         -- ^ Then-branch
-          ciElse    :: Command,         -- ^ Else-branch
-          cmdSrcPos :: SrcPos
+          ciCondThens :: [(Expression,
+                           Command)],   -- ^ Conditional branches
+          ciMbElse    :: Maybe Command, -- ^ Optional else-branch
+          cmdSrcPos   :: SrcPos
       }
     -- | While-loop
     | CmdWhile {
           cwCond    :: Expression,      -- ^ Loop-condition
           cwBody    :: Command,         -- ^ Loop-body
+          cmdSrcPos :: SrcPos
+      }
+    -- | Repeat-loop
+    | CmdRepeat {
+          crBody    :: Command,         -- ^ Loop-body
+          crCond    :: Expression,      -- ^ Loop-condition
           cmdSrcPos :: SrcPos
       }
     -- | Let-command
@@ -159,6 +166,15 @@ data Expression
           expType   :: Type,
           expSrcPos :: SrcPos
       }
+    -- | Conditional expression
+    | ExpCond {
+          ecCond    :: Expression,      -- ^ Condition
+          ecTrue    :: Expression,      -- ^ Value if condition true
+          ecFalse   :: Expression,      -- ^ Value if condition false
+          expType   :: Type,
+          expSrcPos :: SrcPos
+      }
+
 
 
 instance HasSrcPos Expression where

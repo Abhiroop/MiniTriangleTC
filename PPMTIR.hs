@@ -53,15 +53,18 @@ ppCommand n (CmdCall {ccProc = p, ccArgs = es, cmdSrcPos = sp}) =
 ppCommand n (CmdSeq {csCmds = cs, cmdSrcPos = sp}) =
     indent n . showString "CmdSeq" . spc . ppSrcPos sp . nl
     . ppSeq (n+1) ppCommand cs
-ppCommand n (CmdIf {ciCond = e, ciThen = c1, ciElse = c2, cmdSrcPos = sp}) =
+ppCommand n (CmdIf {ciCondThens = ecs, ciMbElse = mc, cmdSrcPos = sp}) =
     indent n . showString "CmdIf" . spc . ppSrcPos sp . nl
-    . ppExpression (n+1) e
-    . ppCommand (n+1) c1
-    . ppCommand (n+1) c2
+    . ppSeq (n+1) (\n (e,c) -> ppExpression n e . ppCommand n c) ecs
+    . ppOpt (n+1) ppCommand mc
 ppCommand n (CmdWhile {cwCond = e, cwBody = c, cmdSrcPos = sp}) =
     indent n . showString "CmdWhile" . spc . ppSrcPos sp . nl
     . ppExpression (n+1) e
     . ppCommand (n+1) c
+ppCommand n (CmdRepeat {crBody = c, crCond = e, cmdSrcPos = sp}) =
+    indent n . showString "CmdRepeat" . spc . ppSrcPos sp . nl
+    . ppCommand (n+1) c
+    . ppExpression (n+1) e
 ppCommand n (CmdLet {clDecls = ds, clBody = c, cmdSrcPos = sp}) =
     indent n . showString "CmdLet" . spc . ppSrcPos sp . nl
     . ppSeq (n+1) ppDeclaration ds
@@ -114,6 +117,11 @@ ppExpression n (ExpPrj {epRcd = r, epFld = f, expType = t, expSrcPos = sp}) =
     . ppExpression (n+1) r
     . indent (n+1) . ppName f . nl
     . indent n . showString ": " . shows t . nl
+ppExpression n (ExpCond {ecCond = c, ecTrue = t, ecFalse = f, expSrcPos = sp})=
+    indent n . showString "ExpCond" . spc . ppSrcPos sp . nl
+    . ppExpression (n+1) c
+    . ppExpression (n+1) t
+    . ppExpression (n+1) f
 
 
 ------------------------------------------------------------------------------

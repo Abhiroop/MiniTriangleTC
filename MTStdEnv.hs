@@ -63,8 +63,9 @@ import Env
 mtStdEnv :: Env
 mtStdEnv =
     mkTopLvlEnv
-        [("Boolean", Boolean),
-         ("Integer", Integer)]
+        [("Boolean",   Boolean),
+         ("Integer",   Integer),
+         ("Character", Character)]
         [("false",   Boolean, ESVBool False),
          ("true",    Boolean, ESVBool True),
          ("minint",  Integer, ESVInt (minBound :: MTInt)),
@@ -84,6 +85,6 @@ mtStdEnv =
          ("&&",      Arr [Boolean, Boolean] Boolean, ESVLbl "and"),
          ("||",      Arr [Boolean, Boolean] Boolean, ESVLbl "or"),
          ("!",       Arr [Boolean] Boolean,          ESVLbl "not"),
-         ("getint",  Arr [Snk Integer] Void,         ESVLbl "getint"), 
+         ("getint",  Arr [Snk Integer] Void,         ESVLbl "getint"),
          ("putint",  Arr [Integer] Void,             ESVLbl "putint"),
          ("skip",    Arr [] Void,                    ESVLbl "skip")]

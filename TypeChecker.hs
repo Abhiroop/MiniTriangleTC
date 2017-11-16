@@ -96,26 +96,36 @@ chkCmd env (A.CmdSeq {A.csCmds = cs, A.cmdSrcPos = sp}) = do
 -- T-IF
 chkCmd env (A.CmdIf {A.ciCondThens = ecs, A.ciMbElse = mc2,
                      A.cmdSrcPos=sp}) = do
--- YOUR CODE HERE: This has just been patched to work for the original
--- if-then-else. The entire list ecs needs to be processed properly,
--- and the fact that the else-branch is optional taken care of.
-    let (e, c1) = head ecs      -- Not wrong, but unnecessary
-    let c2      = fromJust mc2  -- Wrong: the else-branch might not be there.
-    e'  <- chkTpExp env e Boolean                       -- env |- e : Boolean
-    c1' <- chkCmd env c1                                -- env |- c1
-    c2' <- chkCmd env c2                                -- env |- c2
-    return (CmdIf {ciCond = e', ciThen = c1', ciElse = c2', cmdSrcPos = sp})
+  ecs' <- mapM (chkIfExps env) ecs        -- :: [Expression,Command]
+  mc2' <- case mc2 of                     -- :: Maybe Command
+            Nothing -> return Nothing
+            Just c  -> do
+              c' <-  chkCmd env c                       -- env |- c
+              return (Just c')
+  return (CmdIf {ciCondThens = ecs', ciMbElse = mc2', cmdSrcPos = sp})
 -- T-WHILE
 chkCmd env (A.CmdWhile {A.cwCond = e, A.cwBody = c, A.cmdSrcPos = sp}) = do
     e' <- chkTpExp env e Boolean                        -- env |- e : Boolean
     c' <- chkCmd env c                                  -- env |- c
     return (CmdWhile {cwCond = e', cwBody = c', cmdSrcPos = sp})
+-- T-REPEAT
+chkCmd env (A.CmdRepeat {A.crBody = c, A.crCond = e, A.cmdSrcPos = sp}) = do
+    c' <- chkCmd env c                                  -- env |- c
+    e' <- chkTpExp env e Boolean                        -- env |- e : Boolean
+    return (CmdRepeat {crBody = c', crCond = e', cmdSrcPos = sp})
 -- T-LET
 chkCmd env (A.CmdLet {A.clDecls = ds, A.clBody = c, A.cmdSrcPos = sp}) = do
     (ds', env') <- mfix $ \ ~(_, env') ->               -- env;env'|- ds | env'
-                       chkDeclarations (openMinScope env) env' ds 
+                       chkDeclarations (openMinScope env) env' ds
     c'          <- chkCmd env' c                        -- env' |- c
     return (CmdLet {clDecls = ds', clBody = c', cmdSrcPos = sp})
+
+-- Helper function that is mapped over multiple if and elsif expressions
+chkIfExps :: Env -> (A.Expression,A.Command) -> D (Expression,Command)
+chkIfExps env (e,c) = do
+  e' <- chkTpExp env e Boolean                          -- env |- e : Boolean
+  c' <- chkCmd env c                                    -- env |- c
+  return (e',c')
 
 
 -- Check that declarations/definitions are well-typed in given environment
@@ -143,7 +153,7 @@ chkDeclarations env envB
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkDeclarations env envB ds
-        Right (env', x') -> do                      
+        Right (env', x') -> do
             wellinit (itmsLvl x') e'
             (ds', env'') <- chkDeclarations env'    -- env'; envB |- ds | env''
                                             envB
@@ -159,7 +169,7 @@ chkDeclarations env envB
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkDeclarations env envB ds
-        Right (env', x') -> do                      
+        Right (env', x') -> do
             (ds', env'') <- chkDeclarations env'    -- env'; envB |- ds | env''
                                             envB
                                             ds
@@ -193,7 +203,7 @@ chkDeclarations env envB
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkDeclarations env envB ds
-        Right (env', f') -> do                      
+        Right (env', f') -> do
             (ds', env'') <- chkDeclarations env'    -- env'; envB |- ds | env''
                                             envB
                                             ds
@@ -211,7 +221,7 @@ chkDeclarations env envB
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkDeclarations env envB ds
-        Right (env', p') -> do                      
+        Right (env', p') -> do
             (ds', env'') <- chkDeclarations env'    -- env'; envB |- ds | env''
                                             envB
                                             ds
@@ -228,7 +238,7 @@ chkArgDecls :: Env -> [A.ArgDecl] -> D ([IntTermSym], Env)
 -- T-DECLARGEMPTY
 chkArgDecls env [] = return ([], env)
 -- T-DECLARG, T-DECLINARG, T-DECLOUTARG, T-DECLVARARG
-chkArgDecls env  
+chkArgDecls env
             (A.ArgDecl {A.adArg = x, A.adArgMode = am, A.adType = td,
              A.adSrcPos=sp}
             : as) = do
@@ -237,7 +247,7 @@ chkArgDecls env
         Left old -> do
             emitErrD sp (redeclaredMsg old)
             chkArgDecls env as
-        Right (env', x') -> do                          
+        Right (env', x') -> do
             (as', env'') <- chkArgDecls env' as         -- env' |- as | env''
             return (x' : as', env'')
 
@@ -332,6 +342,11 @@ infTpExp env e@(A.ExpLitInt {A.eliVal = n, A.expSrcPos = sp}) = do
     n' <- toMTInt n sp
     return (Integer,                            -- env |- n : Integer
             ExpLitInt {eliVal = n', expType = Integer, expSrcPos = sp})
+-- T-LITCHAR
+infTpExp env e@(A.ExpLitChr {A.elcVal = c, A.expSrcPos = sp}) = do
+    c' <- toMTChr c sp
+    return (Character,                            -- env |- c : Character
+            ExpLitChr {elcVal = c', expType = Character, expSrcPos = sp})
 -- T-VAR
 infTpExp env (A.ExpVar {A.evVar = x, A.expSrcPos = sp}) = do
     tms <- lookupName env x sp          -- env(x) = t, sources(t,t)
@@ -401,7 +416,13 @@ infTpExp env (A.ExpPrj {A.epRcd = e, A.epFld = f, A.expSrcPos = sp}) = do
     where
         notAFieldMsg f rt = "The type \"" ++ show rt
                             ++ "\" does not contain any field \"" ++ f ++ "\"" 
-
+-- T-COND
+infTpExp env (A.ExpCond {A.ecCond = e, A.ecTrue = et, A.ecFalse = ef, A.expSrcPos = sp}) = do
+  e'              <- chkTpExp env e Boolean     -- env |- e : Boolean
+  (tyTrue , et')  <- infNonRefTpExp env et      -- env |- e : t, not reftype(t)
+  (tyFalse, ef')  <- infNonRefTpExp env ef      -- env |- e : t, not reftype(t)
+  require (tyTrue == tyFalse) (srcPos e) ("Types of the 2 expressions don't match")
+  return (tyTrue, ExpCond {ecCond = e', ecTrue = et', ecFalse = ef', expType = tyTrue, expSrcPos = sp}) -- tyTrue and tyFalse should be of the same type
 
 -- Check that expression is well-typed in the given environment and
 -- infer its type assuming it should be an non-reference type:
@@ -676,6 +697,7 @@ wellinit l (ExpAry {eaElts = es}) = mapM_ (wellinit l) es
 wellinit l (ExpIx {eiAry = a, eiIx = i}) = wellinit l a >> wellinit l i
 wellinit l (ExpRcd {erFldDefs = fds}) = mapM_ (wellinit l . snd) fds
 wellinit l (ExpPrj {epRcd = e}) = wellinit l e
+wellinit l (ExpCond {ecCond = e, ecTrue = et, ecFalse = ef}) = wellinit l e >> wellinit l et >> wellinit l ef
 
 
 ------------------------------------------------------------------------------
