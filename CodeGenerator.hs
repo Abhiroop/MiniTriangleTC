@@ -172,7 +172,14 @@ execute majl env n (CmdWhile {cwCond = e, cwBody = c}) = do
     emit (Label lblCond)
     evaluate majl env e
     emit (JUMPIFNZ lblLoop)
-execute majl env n (CmdRepeat {crBody = c, crCond = e}) = undefined -- TODO: Implement Repeat Until
+execute majl env n (CmdRepeat {crBody = c, crCond = e}) = do
+  lblLoop <- newName
+  lblCond <- newName
+  emit (Label lblLoop)
+  execute majl env n c
+  emit (Label lblCond)
+  evaluate majl env e
+  emit (JUMPIFNZ lblLoop)
 execute majl env n (CmdLet {clDecls = ds, clBody = c}) = do
     (env', n') <- elaborateDecls majl env n ds
     execute majl env' n' c
@@ -387,7 +394,17 @@ evaluate majl env (ExpPrj {epRcd = r, epFld = f, expType = t}) = do
     evaluate majl env r
     emit (LOADL (fldOffset f tr))
     emit ADD
-evaluate majl env (ExpCond {ecCond = e, ecTrue = et, ecFalse = ef}) = undefined --TODO: Implement Conditional expression
+evaluate majl env (ExpCond {ecCond = e, ecTrue = et, ecFalse = ef}) = do
+  labelTrue      <- newName
+  labelTerminate <- newName
+  evaluate majl env e
+  emit (JUMPIFNZ labelTrue)
+  evaluate majl env ef
+  emit (JUMP labelTerminate)
+  emit (Label labelTrue)
+  evaluate majl env et
+  emit (Label labelTerminate)
+
 
 
 ------------------------------------------------------------------------------
