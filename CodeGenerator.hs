@@ -149,20 +149,11 @@ execute majl env n (CmdCall {ccProc = p, ccArgs = as}) = do
     evaluate majl env p
     emit CALLI
 execute majl env n (CmdSeq {csCmds = cs}) = executeSeq majl env n cs
-execute majl env n (CmdIf {ciCondThens = ecs, ciMbElse = mc}) = undefined
--- TODO : Implement if then else code generation
-{-
-  do
-    lblElse <- newName
-    lblOver <- newName
-    evaluate majl env e
-    emit (JUMPIFZ lblElse)
-    execute majl env n c1
-    emit (JUMP lblOver)
-    emit (Label lblElse)
-    execute majl env n c2
-    emit (Label lblOver)
--}
+execute majl env n (CmdIf {ciCondThens = ecs, ciMbElse = mc}) = do
+  labelOver <- newName
+  mapM_ (elsif majl env n labelOver) ecs
+  optionalElse majl env n mc
+  emit (Label labelOver)
 execute majl env n (CmdWhile {cwCond = e, cwBody = c}) = do
     lblLoop <- newName
     lblCond <- newName
@@ -172,12 +163,32 @@ execute majl env n (CmdWhile {cwCond = e, cwBody = c}) = do
     emit (Label lblCond)
     evaluate majl env e
     emit (JUMPIFNZ lblLoop)
-execute majl env n (CmdRepeat {crBody = c, crCond = e}) = undefined -- TODO: Implement Repeat Until
+execute majl env n (CmdRepeat {crBody = c, crCond = e}) = do
+  lblLoop <- newName
+  lblCond <- newName
+  emit (Label lblLoop)
+  execute majl env n c
+  emit (Label lblCond)
+  evaluate majl env e
+  emit (JUMPIFZ lblLoop) -- if condition is false continue the loop
 execute majl env n (CmdLet {clDecls = ds, clBody = c}) = do
     (env', n') <- elaborateDecls majl env n ds
     execute majl env' n' c
     emit (POP 0 (n' - n))
 
+elsif :: MSL -> CGEnv -> MTInt -> Name -> (Expression, Command) -> TAMCG ()
+elsif majl env n labelOver (e,c) = do
+  labelFalse <- newName
+  evaluate majl env e
+  emit (JUMPIFZ labelFalse)
+  execute majl env n c
+  emit (JUMP labelOver)
+  emit (Label labelFalse)
+
+optionalElse :: MSL -> CGEnv -> MTInt -> Maybe Command -> TAMCG ()
+optionalElse majl env n Nothing = return ()
+optionalElse majl env n (Just c) = do
+  execute majl env n c
 
 -- Generate code to execute a sequence of commands.
 -- Invariant: Stack depth unchanged.
@@ -387,7 +398,17 @@ evaluate majl env (ExpPrj {epRcd = r, epFld = f, expType = t}) = do
     evaluate majl env r
     emit (LOADL (fldOffset f tr))
     emit ADD
-evaluate majl env (ExpCond {ecCond = e, ecTrue = et, ecFalse = ef}) = undefined --TODO: Implement Conditional expression
+evaluate majl env (ExpCond {ecCond = e, ecTrue = et, ecFalse = ef}) = do
+  labelTrue      <- newName
+  labelTerminate <- newName
+  evaluate majl env e
+  emit (JUMPIFNZ labelTrue)
+  evaluate majl env ef
+  emit (JUMP labelTerminate)
+  emit (Label labelTrue)
+  evaluate majl env et
+  emit (Label labelTerminate)
+
 
 
 ------------------------------------------------------------------------------
