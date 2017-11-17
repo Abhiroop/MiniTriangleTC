@@ -1,5 +1,5 @@
 let
-	const n : Integer = (5>3) ? 10 : 20
+	const n : Integer = (5>3) ? 30 : 20
 in begin
-	putint(1)
+	putint(n)
 end
