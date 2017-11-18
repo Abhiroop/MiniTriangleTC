@@ -1,7 +1,14 @@
 GETINT
-LOAD [LB - 1]
+CALL loop
+LOAD [LB - 1]    ; n
+STORE [SB + 42]  ; store n in some global variable
 LOADL 1
-LSS
-JUMPIFNZ end
-loop : LOAD [LB - 1]
-HALT
+STORE [LB - 1]   ; LB -1 = 1
+loop :   LOAD [LB - 1] ; i
+         LOAD [SB + 42] ; n
+         LSS
+         JMPIFZ end_loop ; i < n ?
+         LOAD [LB - 1] ; i
+         PUTINT
+         CALL loop
+end_loop: HALT
