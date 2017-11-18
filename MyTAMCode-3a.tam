@@ -1,7 +1,29 @@
 GETINT
+CALL foo
+foo:
 LOAD [LB - 1]
+STORE [SB + 3]
+
+LOAD [SB + 3]
 LOADL 1
 LSS
-JUMPIFNZ end
-loop : LOAD [LB - 1]
+JUMPIFNZ end_loop
+
+LOADL 1
+STORE [LB - 1]
+
+loop:
+LOAD [LB - 1]
+PUTINT
+LOAD [LB - 1]
+LOAD [SB + 3]
+LSS
+JUMPIFZ end_loop
+LOAD [LB - 1]
+LOADL 1
+ADD
+CALL loop
+
+
+end_loop:
 HALT
