@@ -30,7 +30,7 @@ import Env
 
 -- | The MiniTriangle initial environment.
 --
--- [Types:] Boolean, Integer
+-- [Types:] Boolean, Integer, Character
 --
 -- [Constants:]
 --
