@@ -63,7 +63,7 @@ data Command
           cmdSrcPos :: SrcPos
       }
 
-        -- | Conditional command
+    -- | Conditional command
     | CmdIf {
           ciCondThens :: [(Expression,
                            Command)],   -- ^ Conditional branches
